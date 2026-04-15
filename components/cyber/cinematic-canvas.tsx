@@ -169,7 +169,7 @@ export function CinematicCanvas() {
               <video
                 ref={videoRef}
                 src={currentScene.videoUrl}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain bg-black"
                 autoPlay
                 muted
                 playsInline
