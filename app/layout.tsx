@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { BgmPlayer } from '@/components/cyber/bgm-player'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -38,6 +39,7 @@ export default function RootLayout({
     <html lang="zh-CN" className="dark">
       <body className="font-mono antialiased bg-[#020202] text-[#e0e0e0]">
         {children}
+        <BgmPlayer />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

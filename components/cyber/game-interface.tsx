@@ -40,7 +40,7 @@ export function GameInterface() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className={`min-h-screen bg-[#020202] relative ${glitchActive ? 'glitch-active' : ''}`}
+      className={`h-screen flex flex-col overflow-hidden bg-[#020202] relative ${glitchActive ? 'glitch-active' : ''}`}
     >
       {/* Background effects */}
       <div className="fixed inset-0 fui-grid opacity-30 pointer-events-none" />
@@ -89,10 +89,11 @@ export function GameInterface() {
       </header>
 
       {/* Main content */}
-      <main className="max-w-7xl mx-auto px-4 py-6 pb-20">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
+      <main className="flex-1 flex overflow-hidden">
+        <div className="flex flex-1 flex-col w-full max-w-7xl mx-auto px-4 py-6">
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 min-h-0">
           {/* Left column - Main content */}
-          <div className="space-y-6">
+          <div className="flex flex-col gap-6 min-h-0 overflow-y-auto">
             {/* Cinematic canvas */}
             <CinematicCanvas />
 
@@ -114,7 +115,7 @@ export function GameInterface() {
           </div>
 
           {/* Right column - Sidebar */}
-          <div className="space-y-6 lg:sticky lg:top-20 self-start">
+          <div className="flex flex-col gap-6 min-h-0 overflow-y-auto">
             {/* Stats dashboard */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
@@ -133,11 +134,12 @@ export function GameInterface() {
               <ChaosConsole />
             </motion.div>
           </div>
+          </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-[#020202]/80 backdrop-blur-md border-t border-[#00f2ff]/10 py-2 px-4 z-30">
+      <footer className="bg-[#020202]/80 backdrop-blur-md border-t border-[#00f2ff]/10 py-2 px-4 z-30">
         <div className="max-w-7xl mx-auto flex items-center justify-between text-xs font-mono text-muted-foreground">
           <span>SECTOR: {currentScene.sectorCode}</span>
           <span className="flex items-center gap-2">

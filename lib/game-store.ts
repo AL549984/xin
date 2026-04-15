@@ -189,7 +189,16 @@ export const useGameStore = create<GameStore>((set, get) => {
         setTimeout(() => advanceToNextScene(), 600);
       } else {
         // 等待路径：视频未就绪，展示 FUI 故障渲染遮罩
-        setTimeout(() => set({ isRenderingGlitch: true }), 600);
+        // 注意：在 600ms 延迟窗口内 preloadNextVideo 的定时器可能已触发并把
+        // nextVideoStatus 设为 'ready'，但此时 isRenderingGlitch 还是 false，
+        // 导致 preloadNextVideo 跳过了 advanceToNextScene 的调用。
+        // 修复：设置遮罩后立即检查最新状态，若已就绪则主动调度跳转。
+        setTimeout(() => {
+          set({ isRenderingGlitch: true });
+          if (get().nextVideoStatus === 'ready') {
+            setTimeout(() => advanceToNextScene(), 800);
+          }
+        }, 600);
       }
     },
 
