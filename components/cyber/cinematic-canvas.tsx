@@ -54,7 +54,7 @@ export function CinematicCanvas() {
   }, [onVideoReady]);
 
   return (
-    <div className="relative w-full max-w-[675px] mx-auto aspect-video rounded-2xl overflow-hidden border border-[#00f2ff]/20">
+    <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-[#00f2ff]/20">
       {/* ── 背景基础层（始终显示）── */}
       <motion.div
         className={`absolute inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#020202] to-[#0a0a0a] fui-grid ${
@@ -169,7 +169,7 @@ export function CinematicCanvas() {
               <video
                 ref={videoRef}
                 src={currentScene.videoUrl}
-                className="w-full h-full object-contain bg-black"
+                className="w-full h-full object-cover"
                 autoPlay
                 muted
                 playsInline
