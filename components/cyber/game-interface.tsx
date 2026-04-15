@@ -90,7 +90,7 @@ export function GameInterface() {
 
       {/* Main content */}
       <main className="max-w-7xl mx-auto px-4 py-6 pb-20">
-        <div className="grid grid-cols-[1fr_280px] gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
           {/* Left column - Main content */}
           <div className="space-y-6">
             {/* Cinematic canvas */}
@@ -114,7 +114,7 @@ export function GameInterface() {
           </div>
 
           {/* Right column - Sidebar */}
-          <div className="space-y-6 sticky top-20 self-start">
+          <div className="space-y-6 lg:sticky lg:top-20 self-start">
             {/* Stats dashboard */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}

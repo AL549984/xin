@@ -116,7 +116,7 @@ export function SummaryScreen() {
             className="text-2xl md:text-3xl font-bold text-[#00f2ff]"
             style={{ textShadow: '0 0 20px #00f2ff60' }}
           >
-            五幕决策档案
+            {scenes.length}幕决策档案
           </h1>
           <p className="text-xs font-mono text-muted-foreground mt-1">
             完整行为记录已生成 // NEURAL_ARCHIVE_COMPLETE

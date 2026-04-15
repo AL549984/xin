@@ -239,7 +239,16 @@ export const useGameStore = create<GameStore>((set, get) => {
 
     setSystemBreach: (breach: boolean) => set({ systemBreach: breach }),
 
-    endGame: () => set({ phase: 'ending' }),
+    endGame: () => {
+      // 手动结束时直接计算结局，跳过 summary 总结页
+      const { choiceHistory, stats, chaosLevel, narrativeHistory } = get();
+      const ending = calculateEnding(choiceHistory, stats, chaosLevel);
+      set({
+        phase: 'ending',
+        ending,
+        narrativeHistory: [...narrativeHistory, ending.narrativeText],
+      });
+    },
 
     proceedToEnding: () => {
       const { choiceHistory, stats, chaosLevel, narrativeHistory } = get();

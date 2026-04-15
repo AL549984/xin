@@ -13,6 +13,7 @@ export function CornerCoordinates({
   stream: string; 
 }) {
   const [time, setTime] = useState('00:00:00');
+  const [frame, setFrame] = useState('0000');
 
   useEffect(() => {
     const updateTime = () => {
@@ -22,6 +23,14 @@ export function CornerCoordinates({
     updateTime();
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
+  }, []);
+
+  // 客户端生成帧号，避免 SSR hydration 不匹配
+  useEffect(() => {
+    const tick = () => setFrame(Math.floor(Math.random() * 9999).toString().padStart(4, '0'));
+    tick();
+    const id = setInterval(tick, 500);
+    return () => clearInterval(id);
   }, []);
 
   return (
@@ -49,7 +58,7 @@ export function CornerCoordinates({
 
       {/* Bottom Right */}
       <div className="absolute bottom-4 right-4 text-xs font-mono text-right text-[#00f2ff]/50">
-        <div>FRAME: {Math.floor(Math.random() * 9999).toString().padStart(4, '0')}</div>
+        <div>FRAME: {frame}</div>
         <div>CODEC: NEURO-H.266</div>
       </div>
 
@@ -179,7 +188,7 @@ export function SystemBreachAlert({ visible }: { visible: boolean }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="absolute inset-0 z-50 pointer-events-none"
+      className="fixed inset-0 z-50 pointer-events-none"
     >
       {/* Red flash overlay */}
       <motion.div

@@ -95,7 +95,10 @@ Return ONLY valid JSON:
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
     const text = await response.text();
-    const data = JSON.parse(text);
+    // 从响应文本中提取 JSON 块（防止 API 返回带警告前缀的非纯 JSON）
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('No JSON found in response');
+    const data = JSON.parse(jsonMatch[0]);
 
     if (!Array.isArray(data?.scenes) || data.scenes.length < 3) {
       throw new Error('Invalid scene structure');
@@ -142,7 +145,7 @@ export function InitScreen() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="h-screen overflow-y-auto bg-[#020202] flex items-center justify-center p-4 md:p-8 relative overflow-hidden"
+      className="h-screen overflow-y-auto bg-[#020202] flex items-center justify-center p-4 md:p-8 relative"
     >
       {/* Background effects */}
       <div className="absolute inset-0 fui-grid opacity-50" />
@@ -208,7 +211,7 @@ export function InitScreen() {
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addKeyword(inputValue)}
+                onKeyDown={(e) => e.key === 'Enter' && addKeyword(inputValue)}
                 placeholder="例如：企业刺客、2099..."
                 className="flex-1 bg-background/50 border border-[#00f2ff]/20 rounded-lg px-4 py-3 text-sm font-mono outline-none focus:border-[#00f2ff]/50 transition-colors text-foreground placeholder:text-muted-foreground"
                 disabled={keywords.length >= 5}
