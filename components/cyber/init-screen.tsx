@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Plus, X, ChevronRight } from 'lucide-react';
+import { Zap, Plus, X, ChevronRight, User, LogOut, Loader2 } from 'lucide-react';
 import { useGameStore } from '@/lib/game-store';
+import { useSecondMe } from '@/hooks/use-secondme';
 import { Scanlines, MiniChart } from './fui-overlays';
 import type { SceneData } from '@/lib/game-types';
 
@@ -117,6 +118,18 @@ export function InitScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState<'generating' | 'booting'>('generating');
   const { initializeGame } = useGameStore();
+  const { user, isLoading: isUserLoading, isAuthenticated, login, logout } = useSecondMe();
+
+  // 登录成功后从用户 bio/interests 自动推导关键词建议
+  const secondmeKeywords: string[] = (() => {
+    if (!user) return [];
+    const tags: string[] = Array.isArray(user.interests) ? user.interests : [];
+    // 从 bio 中提取逗号分隔词语
+    const bioWords = user.bio
+      ? user.bio.split(/[,，、\s]+/).filter(w => w.length >= 2 && w.length <= 8)
+      : [];
+    return [...new Set([...tags, ...bioWords])].slice(0, 6);
+  })();
 
   const addKeyword = (keyword: string) => {
     if (keyword.trim() && !keywords.includes(keyword.trim()) && keywords.length < 5) {
@@ -201,6 +214,69 @@ export function InitScreen() {
             {'>'} 初始化生命蓝图
           </div>
 
+          {/* SecondMe 接入区域 */}
+          <div className="mb-6 border border-[#00f2ff]/15 rounded-xl p-4 bg-[#00f2ff]/[0.03]">
+            <div className="text-xs font-mono text-[#00f2ff]/50 uppercase tracking-widest mb-3">
+              {'>'} SecondMe 数字分身接入
+            </div>
+
+            {isUserLoading ? (
+              <div className="flex items-center gap-2 text-muted-foreground text-sm font-mono">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>检测授权状态...</span>
+              </div>
+            ) : isAuthenticated && user ? (
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  {user.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.name}
+                      className="w-10 h-10 rounded-full border border-[#00f2ff]/40 object-cover"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full border border-[#00f2ff]/40 bg-[#00f2ff]/10 flex items-center justify-center">
+                      <User className="w-5 h-5 text-[#00f2ff]" />
+                    </div>
+                  )}
+                  <div>
+                    <div className="text-sm font-mono text-[#00f2ff]">{user.name}</div>
+                    {user.bio && (
+                      <div className="text-xs font-mono text-muted-foreground line-clamp-1 max-w-[220px]">
+                        {user.bio}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={logout}
+                  className="flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-[#ff0055] transition-colors"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  断开
+                </button>
+              </motion.div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-mono text-muted-foreground">
+                  接入分身以使用你的真实人格数据生成专属剧情
+                </p>
+                <motion.button
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={login}
+                  className="ml-4 shrink-0 px-3 py-1.5 bg-[#00f2ff]/15 border border-[#00f2ff]/40 rounded-lg text-xs font-mono text-[#00f2ff] hover:bg-[#00f2ff]/25 transition-colors"
+                >
+                  接入分身
+                </motion.button>
+              </div>
+            )}
+          </div>
+
           {/* Keyword input */}
           <div className="mb-6">
             <label className="block text-sm font-mono text-muted-foreground mb-2">
@@ -264,10 +340,15 @@ export function InitScreen() {
           {/* Suggested keywords */}
           <div className="mb-8">
             <div className="text-xs font-mono text-muted-foreground mb-2">
-              建议关键词：
+              {isAuthenticated && secondmeKeywords.length > 0
+                ? '来自你分身的关键词：'
+                : '建议关键词：'}
             </div>
             <div className="flex flex-wrap gap-2">
-              {suggestedKeywords
+              {(isAuthenticated && secondmeKeywords.length > 0
+                ? secondmeKeywords
+                : suggestedKeywords
+              )
                 .filter(k => !keywords.includes(k))
                 .slice(0, 6)
                 .map((keyword) => (
@@ -277,7 +358,11 @@ export function InitScreen() {
                     whileTap={{ scale: 0.95 }}
                     onClick={() => addKeyword(keyword)}
                     disabled={keywords.length >= 5}
-                    className="px-3 py-1 bg-background/30 border border-[#00f2ff]/10 rounded-full text-xs font-mono text-muted-foreground hover:text-[#00f2ff] hover:border-[#00f2ff]/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    className={`px-3 py-1 rounded-full text-xs font-mono transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                      isAuthenticated && secondmeKeywords.length > 0
+                        ? 'bg-[#00f2ff]/10 border border-[#00f2ff]/30 text-[#00f2ff]/80 hover:text-[#00f2ff] hover:border-[#00f2ff]/50'
+                        : 'bg-background/30 border border-[#00f2ff]/10 text-muted-foreground hover:text-[#00f2ff] hover:border-[#00f2ff]/30'
+                    }`}
                   >
                     + {keyword}
                   </motion.button>
