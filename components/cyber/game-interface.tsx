@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '@/lib/game-store';
 import { CinematicCanvas } from './cinematic-canvas';
 import { NarrativeDisplay } from './narrative-display';
@@ -9,11 +9,32 @@ import { DecisionMatrix } from './decision-matrix';
 import { ChaosConsole } from './chaos-console';
 import { StatsDashboard } from './stats-dashboard';
 import { SystemBreachAlert, Scanlines, MiniChart, GlitchRenderingOverlay } from './fui-overlays';
+import { SecondMeComment, type SecondMeTrigger } from './secondme-comment';
+import { SecondMeActOracle } from './secondme-act-oracle';
 import { Zap, SkipForward } from 'lucide-react';
+import type { StoryChoice } from '@/lib/game-types';
+import type { SecondMeActResult } from '@/lib/secondme';
 
 export function GameInterface() {
   const { currentScene, makeChoice, systemBreach, glitchActive, endGame, phase, isTransitioning } = useGameStore();
   const keepAliveCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [secondmeTrigger, setSecondmeTrigger] = useState<SecondMeTrigger | null>(null);
+  const [actResult, setActResult] = useState<SecondMeActResult | null>(null);
+  const triggerKeyRef = useRef(0);
+
+  function handleChoice(choice: StoryChoice) {
+    makeChoice(choice);
+    // 清除上一幕的 Act 预判结果（新场景会重新触发）
+    setActResult(null);
+    if (currentScene) {
+      triggerKeyRef.current += 1;
+      setSecondmeTrigger({
+        sceneText: currentScene.narrativeText,
+        choice,
+        key: triggerKeyRef.current,
+      });
+    }
+  }
 
   // 持续向 DOM 内的 canvas 绘制，防止 Chrome 因视频 ended 状态节流 rAF
   useEffect(() => {
@@ -105,11 +126,20 @@ export function GameInterface() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
+              className="space-y-3"
             >
+              {/* Act Agent：分身命运预判 */}
+              <SecondMeActOracle
+                scene={currentScene}
+                sceneKey={currentScene.id}
+                onResult={setActResult}
+              />
+
               <DecisionMatrix
                 choices={currentScene.branchingOptions}
-                onChoice={makeChoice}
+                onChoice={handleChoice}
                 disabled={phase === 'chaos' || isTransitioning}
+                actResult={actResult}
               />
             </motion.div>
           </div>
@@ -133,6 +163,9 @@ export function GameInterface() {
             >
               <ChaosConsole />
             </motion.div>
+
+            {/* SecondMe 分身点评 */}
+            <SecondMeComment trigger={secondmeTrigger} />
           </div>
           </div>
         </div>

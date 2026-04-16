@@ -1,9 +1,10 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Target, Zap, AlertTriangle } from 'lucide-react';
+import { Target, Zap, AlertTriangle, Sparkles } from 'lucide-react';
 import { useGameStore } from '@/lib/game-store';
 import type { StoryChoice } from '@/lib/game-types';
+import type { SecondMeActResult } from '@/lib/secondme';
 
 const choiceIcons = {
   normal: Target,
@@ -36,9 +37,11 @@ interface DecisionMatrixProps {
   choices: StoryChoice[];
   onChoice: (choice: StoryChoice) => void;
   disabled?: boolean;
+  /** Act Agent 预判结果，可选 */
+  actResult?: SecondMeActResult | null;
 }
 
-export function DecisionMatrix({ choices, onChoice, disabled }: DecisionMatrixProps) {
+export function DecisionMatrix({ choices, onChoice, disabled, actResult }: DecisionMatrixProps) {
   return (
     <div className="space-y-3">
       <div className="text-xs font-mono text-[#00f2ff]/50 uppercase tracking-widest mb-4">
@@ -49,6 +52,7 @@ export function DecisionMatrix({ choices, onChoice, disabled }: DecisionMatrixPr
         {choices.map((choice, index) => {
           const Icon = choiceIcons[choice.type];
           const styles = choiceStyles[choice.type];
+          const isAligned = actResult?.alignedChoiceId === choice.id;
           
           return (
             <motion.button
@@ -65,6 +69,7 @@ export function DecisionMatrix({ choices, onChoice, disabled }: DecisionMatrixPr
                 glass backdrop-blur-md transition-all duration-300
                 ${styles.border} ${styles.bg} ${styles.glow}
                 disabled:opacity-50 disabled:cursor-not-allowed
+                ${isAligned ? 'ring-1 ring-[#a855f7]/50' : ''}
               `}
             >
               {/* Choice indicator line */}
@@ -77,6 +82,18 @@ export function DecisionMatrix({ choices, onChoice, disabled }: DecisionMatrixPr
                 animate={{ scaleY: 1 }}
                 transition={{ delay: index * 0.1 + 0.2 }}
               />
+
+              {/* 分身共鸣标签 */}
+              {isAligned && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-[#a855f7]/20 border border-[#a855f7]/40 text-[#d8b4fe]"
+                >
+                  <Sparkles className="w-2.5 h-2.5" />
+                  分身共鸣
+                </motion.div>
+              )}
 
               <div className="flex items-start gap-3">
                 <div className={`p-2 rounded-lg bg-background/50 ${styles.text}`}>
@@ -111,7 +128,7 @@ export function DecisionMatrix({ choices, onChoice, disabled }: DecisionMatrixPr
                 </div>
 
                 {/* Type badge */}
-                <div className={`text-xs font-mono uppercase ${styles.text} opacity-50`}>
+                <div className={`text-xs font-mono uppercase ${styles.text} opacity-50 ${isAligned ? 'mt-5' : ''}`}>
                   {choice.type === 'normal' ? '标准' : 
                    choice.type === 'critical' ? '关键' : '混沌'}
                 </div>
