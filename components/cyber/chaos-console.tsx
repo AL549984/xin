@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Terminal, Send, AlertTriangle } from 'lucide-react';
-import { useGameStore } from '@/lib/game-store';
+import { motion } from 'framer-motion';
+import { Terminal } from 'lucide-react';
 
 const GLITCH_CHARS = '01ABCDEF#$@&*<>[]/\\+-_';
+const MAX_LOG_LINES = 10;
 
 interface GlitchTextProps {
   text: string;
@@ -83,24 +83,12 @@ function GlitchText({ text }: GlitchTextProps) {
 }
 
 export function ChaosConsole() {
-  const [input, setInput] = useState('');
-  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [logLines, setLogLines] = useState<string[]>([
     '[SYSTEM] Neural link handshake established.',
     '[SYNC] Background telemetry stream online.',
     '[BUFFER] Awaiting next intervention payload.',
   ]);
-  const inputRef = useRef<HTMLInputElement>(null);
   const logViewportRef = useRef<HTMLDivElement>(null);
-  const { triggerChaos, phase } = useGameStore();
-
-  const chaosCommands = [
-    '金融崩溃',
-    '记忆入侵',
-    '身份泄露',
-    '系统崩溃',
-    '病毒感染',
-  ];
 
   const logTemplates = [
     '[SYSTEM] Data packet received from neural relay.',
@@ -114,22 +102,11 @@ export function ChaosConsole() {
   ];
 
   useEffect(() => {
-    if (input.length > 0) {
-      const filtered = chaosCommands.filter(cmd => 
-        cmd.toLowerCase().includes(input.toLowerCase())
-      );
-      setSuggestions(filtered);
-    } else {
-      setSuggestions([]);
-    }
-  }, [input]);
-
-  useEffect(() => {
     const intervalId = window.setInterval(() => {
       const nextLine = logTemplates[Math.floor(Math.random() * logTemplates.length)];
       setLogLines((current) => {
         const nextLogs = [...current, nextLine];
-        return nextLogs.slice(-24);
+        return nextLogs.slice(-MAX_LOG_LINES);
       });
     }, 2400);
 
@@ -142,29 +119,11 @@ export function ChaosConsole() {
     viewport.scrollTop = viewport.scrollHeight;
   }, [logLines]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (input.trim() && phase === 'playing') {
-      setLogLines((current) => {
-        const nextLogs = [...current, `[COMMAND] Intervention injected: ${input.trim()}`];
-        return nextLogs.slice(-24);
-      });
-      triggerChaos(input.trim());
-      setInput('');
-      setSuggestions([]);
-    }
-  };
-
-  const handleSuggestionClick = (suggestion: string) => {
-    setInput(suggestion);
-    inputRef.current?.focus();
-  };
-
   return (
-    <div className="relative h-full min-h-0 flex-1">
+    <div className="relative h-[600px] max-h-[calc(100dvh-8.5rem)] min-h-[22rem] overflow-hidden">
       {/* Console container */}
       <motion.div
-        className="glass h-full min-h-0 overflow-hidden rounded-xl border border-[#00f2ff]/20 p-4 flex flex-col"
+        className="glass h-full overflow-hidden rounded-xl border border-[#00f2ff]/20 p-4 flex flex-col"
         whileHover={{ borderColor: 'rgba(0, 242, 255, 0.4)' }}
       >
         {/* Header */}
@@ -197,62 +156,6 @@ export function ChaosConsole() {
               ))}
             </div>
           </div>
-        </div>
-
-        <div className="mt-auto flex-shrink-0 pt-3">
-          {/* Input form */}
-          <form onSubmit={handleSubmit} className="relative">
-            <div className="flex items-center gap-2 rounded-lg border border-[#00f2ff]/10 bg-background/50 px-3 py-2 transition-colors focus-within:border-[#00f2ff]/40">
-              <span className="text-[#00f2ff] font-mono text-sm">
-                [INT_COMMAND_BYPASS {'>'} ]
-              </span>
-              <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="输入混沌事件..."
-                className="flex-1 bg-transparent outline-none text-sm font-mono text-foreground placeholder:text-muted-foreground"
-                disabled={phase !== 'playing'}
-              />
-              <motion.button
-                type="submit"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                disabled={!input.trim() || phase !== 'playing'}
-                className="rounded bg-[#ff0055]/20 p-1.5 text-[#ff0055] transition-colors hover:bg-[#ff0055]/30 disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <Send className="w-4 h-4" />
-              </motion.button>
-            </div>
-
-            {/* Suggestions dropdown */}
-            <AnimatePresence>
-              {suggestions.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="absolute bottom-full left-0 right-0 z-10 mb-2 overflow-hidden rounded-lg glass"
-                >
-                  {suggestions.map((suggestion, index) => (
-                    <motion.button
-                      key={suggestion}
-                      type="button"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      onClick={() => handleSuggestionClick(suggestion)}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm font-mono text-[#ff0055]/70 transition-colors hover:bg-[#ff0055]/10 hover:text-[#ff0055]"
-                    >
-                      <AlertTriangle className="w-3 h-3" />
-                      {suggestion}
-                    </motion.button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </form>
         </div>
       </motion.div>
     </div>
