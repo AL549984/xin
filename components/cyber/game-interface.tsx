@@ -6,6 +6,7 @@ import { useGameStore } from '@/lib/game-store';
 import { CinematicCanvas } from './cinematic-canvas';
 import { NarrativeDisplay } from './narrative-display';
 import { DecisionMatrix } from './decision-matrix';
+import { ChaosConsole } from './chaos-console';
 import { StatsDashboard } from './stats-dashboard';
 import { SystemBreachAlert, Scanlines, MiniChart, GlitchRenderingOverlay } from './fui-overlays';
 import { SecondMeActOracle } from './secondme-act-oracle';
@@ -183,9 +184,19 @@ export function GameInterface() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className="xl:flex-1"
+              className="flex-shrink-0"
             >
               <StatsDashboard />
+            </motion.div>
+
+            {/* Chaos console */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+              className="xl:flex-1"
+            >
+              <ChaosConsole />
             </motion.div>
           </div>
           </div>

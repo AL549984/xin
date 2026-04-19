@@ -90,7 +90,7 @@ export function StatsDashboard() {
   }, [stats]);
 
   return (
-    <div className="glass h-full rounded-xl p-4 flex flex-col space-y-4">
+    <div className="glass rounded-xl p-4 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="text-xs font-mono text-[#00f2ff]/50 uppercase tracking-widest">
@@ -128,7 +128,7 @@ export function StatsDashboard() {
       </div>
 
       {/* Chaos meter */}
-      <div className="mt-auto pt-4 border-t border-[#00f2ff]/10">
+      <div className="pt-4 border-t border-[#00f2ff]/10">
         <div className="flex items-center justify-between mb-2">
           <div className="text-xs font-mono text-[#ff0055]/70 uppercase tracking-widest">
             混沌指数
