@@ -45,14 +45,14 @@ export function ChaosConsole() {
   };
 
   return (
-    <div className="relative h-full">
+    <div className="relative h-full max-h-[24rem] xl:max-h-[26rem]">
       {/* Console container */}
       <motion.div
-        className="glass h-full rounded-xl p-4 border border-[#00f2ff]/20 flex flex-col"
+        className="glass h-full max-h-[24rem] xl:max-h-[26rem] overflow-hidden rounded-xl border border-[#00f2ff]/20 p-4 flex flex-col"
         whileHover={{ borderColor: 'rgba(0, 242, 255, 0.4)' }}
       >
         {/* Header */}
-        <div className="flex items-center gap-2 mb-3 text-xs font-mono text-[#00f2ff]/50">
+        <div className="mb-3 flex items-center gap-2 text-xs font-mono text-[#00f2ff]/50 flex-shrink-0">
           <Terminal className="w-3 h-3" />
           <span>CHAOS_INTERVENTION_CONSOLE</span>
           <span className="ml-auto flex items-center gap-1">
@@ -61,63 +61,65 @@ export function ChaosConsole() {
           </span>
         </div>
 
-        {/* Input form */}
-        <form onSubmit={handleSubmit} className="relative">
-          <div className="flex items-center gap-2 bg-background/50 rounded-lg px-3 py-2 border border-[#00f2ff]/10 focus-within:border-[#00f2ff]/40 transition-colors">
-            <span className="text-[#00f2ff] font-mono text-sm">
-              [INT_COMMAND_BYPASS {'>'} ]
-            </span>
-            <input
-              ref={inputRef}
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="输入混沌事件..."
-              className="flex-1 bg-transparent outline-none text-sm font-mono text-foreground placeholder:text-muted-foreground"
-              disabled={phase !== 'playing'}
-            />
-            <motion.button
-              type="submit"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              disabled={!input.trim() || phase !== 'playing'}
-              className="p-1.5 rounded bg-[#ff0055]/20 text-[#ff0055] hover:bg-[#ff0055]/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              <Send className="w-4 h-4" />
-            </motion.button>
-          </div>
-
-          {/* Suggestions dropdown */}
-          <AnimatePresence>
-            {suggestions.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute top-full left-0 right-0 mt-2 glass rounded-lg overflow-hidden z-10"
+        <div className="min-h-0 flex-1 overflow-y-auto pr-2 [scrollbar-color:rgba(34,211,238,0.7)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-cyan-500/70 [&::-webkit-scrollbar-track]:bg-transparent">
+          {/* Input form */}
+          <form onSubmit={handleSubmit} className="relative">
+            <div className="flex items-center gap-2 rounded-lg border border-[#00f2ff]/10 bg-background/50 px-3 py-2 transition-colors focus-within:border-[#00f2ff]/40">
+              <span className="text-[#00f2ff] font-mono text-sm">
+                [INT_COMMAND_BYPASS {'>'} ]
+              </span>
+              <input
+                ref={inputRef}
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="输入混沌事件..."
+                className="flex-1 bg-transparent outline-none text-sm font-mono text-foreground placeholder:text-muted-foreground"
+                disabled={phase !== 'playing'}
+              />
+              <motion.button
+                type="submit"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                disabled={!input.trim() || phase !== 'playing'}
+                className="rounded bg-[#ff0055]/20 p-1.5 text-[#ff0055] transition-colors hover:bg-[#ff0055]/30 disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                {suggestions.map((suggestion, index) => (
-                  <motion.button
-                    key={suggestion}
-                    type="button"
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    onClick={() => handleSuggestionClick(suggestion)}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm font-mono text-left hover:bg-[#ff0055]/10 text-[#ff0055]/70 hover:text-[#ff0055] transition-colors"
-                  >
-                    <AlertTriangle className="w-3 h-3" />
-                    {suggestion}
-                  </motion.button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </form>
+                <Send className="w-4 h-4" />
+              </motion.button>
+            </div>
 
-        {/* Helper text */}
-        <div className="mt-3 text-xs font-mono text-muted-foreground xl:mt-auto xl:pt-3">
-          按 Enter 注入混沌事件，打断当前叙事流
+            {/* Suggestions dropdown */}
+            <AnimatePresence>
+              {suggestions.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute top-full left-0 right-0 z-10 mt-2 overflow-hidden rounded-lg glass"
+                >
+                  {suggestions.map((suggestion, index) => (
+                    <motion.button
+                      key={suggestion}
+                      type="button"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm font-mono text-[#ff0055]/70 transition-colors hover:bg-[#ff0055]/10 hover:text-[#ff0055]"
+                    >
+                      <AlertTriangle className="w-3 h-3" />
+                      {suggestion}
+                    </motion.button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </form>
+
+          {/* Helper text */}
+          <div className="pt-3 mt-3 text-xs font-mono text-muted-foreground">
+            按 Enter 注入混沌事件，打断当前叙事流
+          </div>
         </div>
       </motion.div>
     </div>
