@@ -124,9 +124,21 @@ export function GameInterface() {
           {/* Left column - Main content */}
           <div className="flex min-w-0 flex-col gap-4 md:gap-6">
             <div className="flex min-w-0 flex-col gap-4 md:gap-6 xl:flex-row xl:items-start">
-              {/* Cinematic canvas */}
-              <div className="w-full max-w-[42rem] flex-shrink-0 xl:max-w-none xl:flex-[1.1]">
-                <CinematicCanvas />
+              <div className="w-full max-w-[42rem] flex flex-col gap-4 flex-shrink-0 xl:max-w-none xl:flex-[1.1]">
+                {/* Cinematic canvas */}
+                <div className="flex-shrink-0">
+                  <CinematicCanvas />
+                </div>
+
+                {/* A2A 蓝框：Cyber Director Agent 状态区，固定在视频下方 */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.28 }}
+                  className="flex-shrink-0 min-h-[10rem]"
+                >
+                  <CyberDirectorPanel command={directorCommand} />
+                </motion.div>
               </div>
 
               {/* Narrative display */}
@@ -166,12 +178,13 @@ export function GameInterface() {
           </div>
 
           {/* Right column - Sidebar */}
-          <div className="flex min-w-0 flex-col gap-4 md:gap-6 pb-4 xl:sticky xl:top-[5.5rem] xl:self-start xl:pb-0">
+          <div className="flex min-w-0 flex-col gap-4 md:gap-6 pb-4 xl:min-h-[calc(100dvh-8.5rem)] xl:pb-0">
             {/* Stats dashboard */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
+              className="flex-shrink-0"
             >
               <StatsDashboard />
             </motion.div>
@@ -181,17 +194,9 @@ export function GameInterface() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
+              className="xl:flex-1"
             >
               <ChaosConsole />
-            </motion.div>
-
-            {/* A2A 蓝框：Cyber Director 永久固定 Agent 对话框 */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              <CyberDirectorPanel command={directorCommand} />
             </motion.div>
           </div>
           </div>

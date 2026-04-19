@@ -45,10 +45,10 @@ export function ChaosConsole() {
   };
 
   return (
-    <div className="relative">
+    <div className="relative h-full">
       {/* Console container */}
       <motion.div
-        className="glass rounded-xl p-4 border border-[#00f2ff]/20"
+        className="glass h-full rounded-xl p-4 border border-[#00f2ff]/20 flex flex-col"
         whileHover={{ borderColor: 'rgba(0, 242, 255, 0.4)' }}
       >
         {/* Header */}
@@ -116,7 +116,7 @@ export function ChaosConsole() {
         </form>
 
         {/* Helper text */}
-        <div className="mt-3 text-xs font-mono text-muted-foreground">
+        <div className="mt-3 text-xs font-mono text-muted-foreground xl:mt-auto xl:pt-3">
           按 Enter 注入混沌事件，打断当前叙事流
         </div>
       </motion.div>
