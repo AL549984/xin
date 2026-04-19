@@ -100,9 +100,9 @@ export function SummaryScreen() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="h-screen overflow-y-auto no-scrollbar bg-[#020202] flex items-center justify-center p-4 md:p-8"
+      className="min-h-dvh overflow-y-auto no-scrollbar bg-[#020202] flex items-start md:items-center justify-center p-4 md:p-8"
     >
-      <div className="w-full max-w-2xl space-y-5">
+      <div className="w-full max-w-2xl space-y-5 my-4 md:my-0">
         {/* ── 页眉 ── */}
         <motion.div
           initial={{ y: -20, opacity: 0 }}
@@ -186,7 +186,7 @@ export function SummaryScreen() {
         </motion.div>
 
         {/* ── 属性终值 + 行动风格 ── */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* 属性终值 */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}

@@ -273,7 +273,7 @@ export function InitScreen() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="h-screen overflow-y-auto no-scrollbar bg-[#020202] flex items-center justify-center p-4 md:p-8 relative"
+      className="min-h-dvh overflow-y-auto no-scrollbar bg-[#020202] flex items-start md:items-center justify-center p-4 md:p-8 relative"
     >
       {/* Background effects */}
       <div className="absolute inset-0 fui-grid opacity-50" />
@@ -292,7 +292,7 @@ export function InitScreen() {
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="w-full max-w-2xl"
+        className="w-full max-w-2xl my-4 md:my-0"
       >
         {/* Logo/Title */}
         <div className="text-center mb-12">

@@ -69,7 +69,7 @@ export function GameInterface() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className={`h-screen flex flex-col overflow-hidden bg-[#020202] relative ${glitchActive ? 'glitch-active' : ''}`}
+      className={`min-h-dvh lg:h-dvh flex flex-col overflow-y-auto lg:overflow-hidden bg-[#020202] relative ${glitchActive ? 'glitch-active' : ''}`}
     >
       {/* Background effects */}
       <div className="fixed inset-0 fui-grid opacity-30 pointer-events-none" />
@@ -118,11 +118,11 @@ export function GameInterface() {
       </header>
 
       {/* Main content */}
-      <main className="flex-1 flex overflow-hidden">
-        <div className="flex flex-1 flex-col w-full max-w-7xl mx-auto px-4 py-6">
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 min-h-0">
+      <main className="flex-1 flex overflow-visible lg:overflow-hidden">
+        <div className="flex flex-1 flex-col w-full max-w-7xl mx-auto px-3 py-4 md:px-4 md:py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_280px] gap-4 md:gap-6 lg:min-h-0">
           {/* Left column - Main content */}
-          <div className="flex flex-col gap-6 min-h-0 overflow-y-auto no-scrollbar">
+          <div className="flex flex-col gap-4 md:gap-6 min-h-0 overflow-visible lg:overflow-y-auto no-scrollbar">
             {/* Cinematic canvas */}
             <CinematicCanvas />
 
@@ -160,7 +160,7 @@ export function GameInterface() {
           </div>
 
           {/* Right column - Sidebar */}
-          <div className="flex flex-col gap-6 min-h-0 overflow-y-auto no-scrollbar">
+          <div className="flex flex-col gap-4 md:gap-6 min-h-0 overflow-visible lg:overflow-y-auto no-scrollbar pb-4 lg:pb-0">
             {/* Stats dashboard */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
@@ -193,8 +193,8 @@ export function GameInterface() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-[#020202]/80 backdrop-blur-md border-t border-[#00f2ff]/10 py-2 px-4 z-30">
-        <div className="max-w-7xl mx-auto flex items-center justify-between text-xs font-mono text-muted-foreground">
+      <footer className="bg-[#020202]/80 backdrop-blur-md border-t border-[#00f2ff]/10 py-2 px-3 md:px-4 z-30">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-1 md:justify-between text-[11px] md:text-xs font-mono text-muted-foreground">
           <span>SECTOR: {currentScene.sectorCode}</span>
           <span className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />

@@ -27,9 +27,9 @@ export function SoulBackupCard() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="h-screen overflow-y-auto no-scrollbar bg-[#020202] flex items-center justify-center p-4 md:p-8"
+      className="min-h-dvh overflow-y-auto no-scrollbar bg-[#020202] flex items-start md:items-center justify-center p-4 md:p-8"
     >
-      <div className="w-full max-w-2xl">
+      <div className="w-full max-w-2xl my-4 md:my-0">
         {/* ── 结局标题区 ── */}
         {ending && (
           <motion.div
@@ -115,7 +115,7 @@ export function SoulBackupCard() {
 
           <div className="p-5 md:p-7">
             {/* 卡头 */}
-            <div className="flex items-start justify-between mb-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-5">
               <div>
                 <div className="text-xs font-mono text-muted-foreground mb-1">CYBER-LIFE // 身份证明</div>
                 <div className="text-xl md:text-2xl font-bold" style={{ color: accentColor }}>
@@ -151,7 +151,7 @@ export function SoulBackupCard() {
             )}
 
             {/* 属性 */}
-            <div className="grid grid-cols-3 gap-4 mb-5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
               {[
                 { label: '财富', value: stats.wealth, color: '#00f2ff', Icon: Zap },
                 { label: '理智', value: stats.sanity, color: '#ffd700', Icon: Brain },
@@ -207,7 +207,7 @@ export function SoulBackupCard() {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.4 }}
-          className="flex gap-3 mt-5"
+          className="flex flex-col sm:flex-row gap-3 mt-5"
         >
           <motion.button
             whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
