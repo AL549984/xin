@@ -45,7 +45,13 @@ export function CinematicCanvas() {
   }, [onVideoReady]);
 
   return (
-    <div className="relative w-full max-w-[675px] mx-auto aspect-video rounded-2xl overflow-hidden border border-[#00f2ff]/20 group">
+    <div
+      className="relative w-full mx-auto rounded-2xl overflow-hidden border border-[#00f2ff]/20 group"
+      style={{
+        aspectRatio: '16 / 9',
+        maxWidth: 'min(100%, calc((100dvh - 14rem) * 16 / 9))',
+      }}
+    >
       {/* ── CSS 扫描线遮罩 ── */}
       <div className="absolute inset-0 pointer-events-none z-20 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%]" />
 
@@ -158,12 +164,12 @@ export function CinematicCanvas() {
             transition={{ duration: 0.9, ease: 'easeOut' }}
             className="absolute inset-0 z-10"
           >
-            {/* Supabase 视频或 AI 图片，完全覆盖整个 Canvas 区域 */}
+            {/* Supabase 视频或 AI 图片，完整显示整个画面，避免裁切 */}
             {currentScene.videoUrl ? (
               <video
                 ref={videoRef}
                 src={getStorageUrl('videos', currentScene.videoUrl)}
-                className="w-full h-full object-cover grayscale-[0.2] brightness-110"
+                className="w-full h-full object-contain bg-[#050505] grayscale-[0.2] brightness-110"
                 autoPlay
                 loop
                 muted
@@ -174,7 +180,7 @@ export function CinematicCanvas() {
               <img
                 src={buildImageUrl(currentScene.videoPromptDescription, currentScene.id)}
                 alt={currentScene.videoPromptDescription}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain bg-[#050505]"
               />
             )}
 
