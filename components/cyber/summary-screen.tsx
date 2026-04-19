@@ -100,7 +100,7 @@ export function SummaryScreen() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="h-screen overflow-y-auto bg-[#020202] flex items-center justify-center p-4 md:p-8"
+      className="h-screen overflow-y-auto no-scrollbar bg-[#020202] flex items-center justify-center p-4 md:p-8"
     >
       <div className="w-full max-w-2xl space-y-5">
         {/* ── 页眉 ── */}

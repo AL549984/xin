@@ -117,6 +117,91 @@ export async function parseSecondMeAct(
   onDone();
 }
 
+// ─── Cyber Director 类型 ─────────────────────────────────────────
+
+/**
+ * Cyber Director 生成的剧情 JSON。
+ * 由 Official Agent 根据随机选取的视频素材动态生成。
+ */
+export interface DirectorScenePlot {
+  /** 本幕使用的视频文件名，如 scene_003.mp4 */
+  videoUrl: string;
+  /** 叙事正文（200-400字） */
+  narrativeText: string;
+  /** 区域代号，如 NEO-9X */
+  sectorCode: string;
+  /** 流状态，如 ENCRYPTED */
+  streamStatus: string;
+  /** 导演对玩家分身的指令摘要 */
+  directive: string;
+  /** 当前幕的分支选项 */
+  branchingOptions: Array<{
+    id: string;
+    text: string;
+    type: 'normal' | 'critical' | 'chaos';
+    statImpact?: { wealth?: number; sanity?: number };
+  }>;
+  /** 本幕结束时的属性影响 */
+  statImpact: { wealth?: number; sanity?: number };
+}
+
+/**
+ * 解析 Cyber Director SSE 流。
+ * 拼接所有增量 content 后 JSON.parse，触发 onResult。
+ */
+export async function parseDirectorStream(
+  response: Response,
+  onResult: (plot: DirectorScenePlot) => void,
+  onDone: () => void,
+): Promise<void> {
+  const reader = response.body?.getReader();
+  if (!reader) { onDone(); return; }
+
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let accumulated = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        const payload = line.slice(6).trim();
+        if (payload === '[DONE]') {
+          try {
+            const jsonMatch = accumulated.match(/\{[\s\S]*\}/);
+            if (!jsonMatch) throw new Error('no JSON');
+            onResult(JSON.parse(jsonMatch[0]) as DirectorScenePlot);
+          } catch {
+            // 忽略解析失败，调用方自行处理
+          }
+          onDone();
+          return;
+        }
+        try {
+          const json = JSON.parse(payload);
+          const content: string = json.choices?.[0]?.delta?.content ?? '';
+          if (content) accumulated += content;
+        } catch { /* 忽略 */ }
+      }
+    }
+  }
+
+  // 流自然结束但未收到 [DONE]
+  if (accumulated) {
+    try {
+      const jsonMatch = accumulated.match(/\{[\s\S]*\}/);
+      if (jsonMatch) onResult(JSON.parse(jsonMatch[0]) as DirectorScenePlot);
+    } catch { /* 忽略 */ }
+  }
+  onDone();
+}
+
 // ─── Chat Agent 类型 ─────────────────────────────────────────────
 
 /**
