@@ -38,20 +38,31 @@ export function NarrativeDisplay() {
     const text = currentScene.narrativeText;
     let index = 0;
 
-    // Start audio immediately with the typewriter
+    // Start audio first
     playNarration();
 
-    const typeInterval = setInterval(() => {
-      if (index < text.length) {
-        setDisplayedText(text.slice(0, index + 1));
-        index++;
-      } else {
-        clearInterval(typeInterval);
-        setIsTyping(false);
-      }
-    }, 200);
+    // Delay typewriter so audio leads by 1.5s
+    const startDelay = setTimeout(() => {
+      const typeInterval = setInterval(() => {
+        if (index < text.length) {
+          setDisplayedText(text.slice(0, index + 1));
+          index++;
+        } else {
+          clearInterval(typeInterval);
+          setIsTyping(false);
+        }
+      }, 200);
 
-    return () => clearInterval(typeInterval);
+      // Store interval id for cleanup
+      cleanupRef.current = () => clearInterval(typeInterval);
+    }, 1500);
+
+    const cleanupRef = { current: () => {} };
+
+    return () => {
+      clearTimeout(startDelay);
+      cleanupRef.current();
+    };
   }, [currentScene]);
 
   return (
