@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CornerCoordinates, FloatingDataPoints, Scanlines } from './fui-overlays';
 import { VideoSignalOverlay } from './video-signal-overlay';
 import { useGameStore } from '@/lib/game-store';
+import { getStorageUrl } from '@/lib/supabase';
 
 function buildImageUrl(description: string, sceneId: string): string {
   const seed = parseInt(sceneId.replace(/\D/g, ''), 10) || 42;
@@ -122,11 +123,11 @@ export function CinematicCanvas() {
         )}
       </AnimatePresence>
 
-      {/* ── 本地视频源（videoUrl 存在时直接渲染，跳过 AI 图片逻辑）── */}
+      {/* ── Supabase 视频源（videoUrl 存在时直接渲染，跳过 AI 图片逻辑）── */}
       {currentScene?.videoUrl ? (
         <video
           key={currentScene.id}
-          src={currentScene.videoUrl}
+          src={getStorageUrl('videos', currentScene.videoUrl)}
           className="hidden"
           onCanPlay={handleImageLoad}
           onError={handleImageError}
@@ -157,11 +158,11 @@ export function CinematicCanvas() {
             transition={{ duration: 0.9, ease: 'easeOut' }}
             className="absolute inset-0 z-10"
           >
-            {/* 本地视频或 AI 图片，完全覆盖整个 Canvas 区域 */}
+            {/* Supabase 视频或 AI 图片，完全覆盖整个 Canvas 区域 */}
             {currentScene.videoUrl ? (
               <video
                 ref={videoRef}
-                src={currentScene.videoUrl}
+                src={getStorageUrl('videos', currentScene.videoUrl)}
                 className="w-full h-full object-cover grayscale-[0.2] brightness-110"
                 autoPlay
                 loop
