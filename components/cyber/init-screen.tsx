@@ -1,12 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Plus, X, ChevronRight, User, LogOut, Loader2 } from 'lucide-react';
+import { Zap, Plus, X, ChevronRight, User, LogOut, Loader2, Volume2, VolumeX } from 'lucide-react';
 import { useGameStore } from '@/lib/game-store';
 import { useSecondMe } from '@/hooks/use-secondme';
 import { Scanlines, MiniChart } from './fui-overlays';
+import { supabase } from '@/lib/supabase';
 import type { SceneData } from '@/lib/game-types';
+
+interface GameSceneRow {
+  id: number;
+  video_url: string;
+  audio_url: string;
+  story_text: string;
+}
 
 const suggestedKeywords = [
   '企业刺客',
@@ -120,6 +128,72 @@ export function InitScreen() {
   const { initializeGame } = useGameStore();
   const { user, isLoading: isUserLoading, isAuthenticated, login, logout } = useSecondMe();
 
+  // ---- Supabase 云端场景数据 ----
+  const [sceneRow, setSceneRow] = useState<GameSceneRow | null>(null);
+  const [isMuted, setIsMuted] = useState(true); // 浏览器策略：视频默认静音才能自动播放
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  // 组件挂载时从 game_scenes 表随机取一行
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchRandomScene() {
+      // 用 Postgres 的 random() 来随机排序，取 1 行
+      const { data, error } = await supabase
+        .from('game_scenes')
+        .select('id, video_url, audio_url, story_text')
+        .order('id', { ascending: false }) // 先按反序
+        .limit(100); // 取一定范围
+
+      if (error || !data || data.length === 0) {
+        console.warn('获取场景数据失败:', error);
+        return;
+      }
+
+      // 客户端随机选一行
+      const randomIndex = Math.floor(Math.random() * data.length);
+      if (!cancelled) setSceneRow(data[randomIndex] as GameSceneRow);
+    }
+    fetchRandomScene();
+    return () => { cancelled = true; };
+  }, []);
+
+  // 场景加载后自动播放视频和音频
+  useEffect(() => {
+    if (!sceneRow) return;
+
+    // 视频自动播放（muted 时浏览器允许自动播放）
+    const video = videoRef.current;
+    if (video) {
+      video.src = sceneRow.video_url;
+      video.muted = true;
+      video.play().catch(() => {});
+    }
+
+    // 音频自动播放（大部分浏览器会阻止带声音的自动播放，用户交互后再恢复）
+    const audio = audioRef.current;
+    if (audio) {
+      audio.src = sceneRow.audio_url;
+      audio.play().catch(() => {});
+    }
+  }, [sceneRow]);
+
+  // 取消静音 / 恢复静音 toggle
+  const toggleMute = useCallback(() => {
+    setIsMuted(prev => {
+      const next = !prev;
+      if (videoRef.current) videoRef.current.muted = next;
+      if (audioRef.current) {
+        if (next) {
+          audioRef.current.pause();
+        } else {
+          audioRef.current.play().catch(() => {});
+        }
+      }
+      return next;
+    });
+  }, []);
+
   // 登录成功后从用户 bio/interests 自动推导关键词建议
   const secondmeKeywords: string[] = (() => {
     if (!user) return [];
@@ -160,9 +234,35 @@ export function InitScreen() {
       exit={{ opacity: 0 }}
       className="h-screen overflow-y-auto no-scrollbar bg-[#020202] flex items-center justify-center p-4 md:p-8 relative"
     >
+      {/* Background video from Supabase */}
+      {sceneRow?.video_url && (
+        <video
+          ref={videoRef}
+          className="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none"
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+      )}
+
+      {/* Hidden audio player */}
+      {sceneRow?.audio_url && (
+        <audio ref={audioRef} loop preload="auto" />
+      )}
+
       {/* Background effects */}
       <div className="absolute inset-0 fui-grid opacity-50" />
       <Scanlines />
+
+      {/* Mute / Unmute toggle */}
+      <button
+        onClick={toggleMute}
+        className="absolute top-8 right-8 z-20 p-2 rounded-full bg-black/40 border border-[#00f2ff]/30 text-[#00f2ff] hover:bg-black/60 transition-colors"
+        title={isMuted ? '取消静音' : '静音'}
+      >
+        {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+      </button>
       
       {/* Decorative elements */}
       <div className="absolute top-8 left-8">
@@ -202,6 +302,23 @@ export function InitScreen() {
             THE GLITCH SCRIPT // AI 影游体验
           </motion.p>
         </div>
+
+        {/* Story text from Supabase */}
+        <AnimatePresence>
+          {sceneRow?.story_text && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ delay: 0.35 }}
+              className="mb-6 px-4 py-3 rounded-xl border border-[#00f2ff]/15 bg-black/40 backdrop-blur-sm"
+            >
+              <p className="text-sm md:text-base font-mono text-[#00f2ff]/80 leading-relaxed text-center">
+                {sceneRow.story_text}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Initialization card */}
         <motion.div
