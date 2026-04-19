@@ -273,7 +273,7 @@ export function InitScreen() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="min-h-dvh overflow-y-auto no-scrollbar bg-[#020202] flex items-start md:items-center justify-center p-4 md:p-8 relative"
+      className="min-h-screen min-h-dvh overflow-y-auto no-scrollbar bg-[#020202] flex items-start md:items-center justify-center p-4 md:p-8 relative"
     >
       {/* Background effects */}
       <div className="absolute inset-0 fui-grid opacity-50" />

@@ -69,7 +69,7 @@ export function GameInterface() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className={`min-h-dvh lg:h-dvh flex flex-col overflow-y-auto lg:overflow-hidden bg-[#020202] relative ${glitchActive ? 'glitch-active' : ''}`}
+      className={`min-h-screen min-h-dvh flex flex-col overflow-y-auto bg-[#020202] relative ${glitchActive ? 'glitch-active' : ''}`}
     >
       {/* Background effects */}
       <div className="fixed inset-0 fui-grid opacity-30 pointer-events-none" />
@@ -118,23 +118,29 @@ export function GameInterface() {
       </header>
 
       {/* Main content */}
-      <main className="flex-1 flex overflow-visible lg:overflow-hidden">
+      <main className="flex flex-1 overflow-x-hidden">
         <div className="flex flex-1 flex-col w-full max-w-7xl mx-auto px-3 py-4 md:px-4 md:py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_280px] gap-4 md:gap-6 lg:min-h-0">
+          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_280px] gap-4 md:gap-6">
           {/* Left column - Main content */}
-          <div className="flex flex-col gap-4 md:gap-6 min-h-0 overflow-visible lg:overflow-y-auto no-scrollbar">
-            {/* Cinematic canvas */}
-            <CinematicCanvas />
+          <div className="flex min-w-0 flex-col gap-4 md:gap-6">
+            <div className="flex min-w-0 flex-col gap-4 md:gap-6 xl:flex-row xl:items-start">
+              {/* Cinematic canvas */}
+              <div className="w-full max-w-[42rem] flex-shrink-0 xl:max-w-none xl:flex-[1.1]">
+                <CinematicCanvas />
+              </div>
 
-            {/* Narrative display */}
-            <NarrativeDisplay />
+              {/* Narrative display */}
+              <div className="w-full flex-shrink-0 xl:min-w-0 xl:flex-[0.9]">
+                <NarrativeDisplay />
+              </div>
+            </div>
 
             {/* Decision matrix */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="space-y-3"
+              className="space-y-3 flex-shrink-0"
             >
               {/* Act Agent：分身命运预判 */}
               <SecondMeActOracle
@@ -160,7 +166,7 @@ export function GameInterface() {
           </div>
 
           {/* Right column - Sidebar */}
-          <div className="flex flex-col gap-4 md:gap-6 min-h-0 overflow-visible lg:overflow-y-auto no-scrollbar pb-4 lg:pb-0">
+          <div className="flex min-w-0 flex-col gap-4 md:gap-6 pb-4 xl:sticky xl:top-[5.5rem] xl:self-start xl:pb-0">
             {/* Stats dashboard */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}

@@ -46,11 +46,7 @@ export function CinematicCanvas() {
 
   return (
     <div
-      className="relative w-full mx-auto rounded-2xl overflow-hidden border border-[#00f2ff]/20 group"
-      style={{
-        aspectRatio: '16 / 9',
-        maxWidth: 'min(100%, calc((100dvh - 14rem) * 16 / 9))',
-      }}
+      className="relative w-full aspect-video rounded-2xl overflow-hidden border border-[#00f2ff]/20 group bg-[#050505] flex-shrink-0"
     >
       {/* ── CSS 扫描线遮罩 ── */}
       <div className="absolute inset-0 pointer-events-none z-20 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%]" />
