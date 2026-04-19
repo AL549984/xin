@@ -1,15 +1,35 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '@/lib/game-store';
 
 export function NarrativeDisplay() {
-  const { currentScene, narrativeHistory, glitchActive, systemBreach } = useGameStore();
+  const { currentScene, narrativeHistory, glitchActive, systemBreach, setTTSSpeaking } = useGameStore();
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Typewriter effect
+  // Play local narration audio for the current scene
+  const playNarration = () => {
+    const audio = audioRef.current;
+    if (!audio || !currentScene) return;
+
+    // Audio file path: /narration/scene_<id>.mp3
+    const src = `/narration/${currentScene.id}.mp3`;
+    audio.src = src;
+    setTTSSpeaking(true);
+
+    audio.play().catch(() => {
+      // File may not exist yet — silently skip
+      setTTSSpeaking(false);
+    });
+
+    audio.onended = () => setTTSSpeaking(false);
+    audio.onerror = () => setTTSSpeaking(false);
+  };
+
+  // Typewriter effect + narration audio sync
   useEffect(() => {
     if (!currentScene) return;
     
@@ -17,6 +37,9 @@ export function NarrativeDisplay() {
     setDisplayedText('');
     const text = currentScene.narrativeText;
     let index = 0;
+
+    // Start audio immediately with the typewriter
+    playNarration();
 
     const typeInterval = setInterval(() => {
       if (index < text.length) {
@@ -26,7 +49,7 @@ export function NarrativeDisplay() {
         clearInterval(typeInterval);
         setIsTyping(false);
       }
-    }, 30);
+    }, 200);
 
     return () => clearInterval(typeInterval);
   }, [currentScene]);
@@ -96,6 +119,9 @@ export function NarrativeDisplay() {
           </div>
         )}
       </motion.div>
+
+      {/* Hidden audio element for TTS */}
+      <audio ref={audioRef} />
     </div>
   );
 }

@@ -19,18 +19,8 @@ export function CinematicCanvas() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 视频开始播放时用 setTimeout 精确调度暂停，避免 ended 状态触发浏览器 rAF 节流
-  const handleVideoPlay = useCallback(() => {
-    const video = videoRef.current;
-    if (!video || !video.duration) return;
-    if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current);
-    const msUntilPause = (video.duration - video.currentTime - 0.3) * 1000;
-    if (msUntilPause > 0) {
-      pauseTimerRef.current = setTimeout(() => {
-        if (videoRef.current) videoRef.current.pause();
-      }, msUntilPause);
-    }
-  }, []);
+  // 视频循环播放，无需暂停
+  const handleVideoPlay = useCallback(() => {}, []);
 
   // 场景切换时清除定时器并重置状态
   useEffect(() => {
@@ -54,7 +44,10 @@ export function CinematicCanvas() {
   }, [onVideoReady]);
 
   return (
-    <div className="relative w-full max-w-[675px] mx-auto aspect-video rounded-2xl overflow-hidden border border-[#00f2ff]/20">
+    <div className="relative w-full max-w-[675px] mx-auto aspect-video rounded-2xl overflow-hidden border border-[#00f2ff]/20 group">
+      {/* ── CSS 扫描线遮罩 ── */}
+      <div className="absolute inset-0 pointer-events-none z-20 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%]" />
+
       {/* ── 背景基础层（始终显示）── */}
       <motion.div
         className={`absolute inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#020202] to-[#0a0a0a] fui-grid ${
@@ -169,11 +162,11 @@ export function CinematicCanvas() {
               <video
                 ref={videoRef}
                 src={currentScene.videoUrl}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover grayscale-[0.2] brightness-110"
                 autoPlay
+                loop
                 muted
                 playsInline
-                onPlay={handleVideoPlay}
               />
             ) : (
               // eslint-disable-next-line @next/next/no-img-element

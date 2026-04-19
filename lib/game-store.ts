@@ -18,6 +18,7 @@ interface GameStore extends GameState {
   endGame: () => void;
   resetGame: () => void;
   proceedToEnding: () => void;
+  setTTSSpeaking: (speaking: boolean) => void;
 }
 
 const initialStats: PlayerStats = {
@@ -43,6 +44,7 @@ const initialState: GameState = {
   isTransitioning: false,
   choiceHistory: [],
   ending: null,
+  isTTSSpeaking: false,
 };
 
 /** 根据玩家的选择历史与最终属性值计算结局 */
@@ -247,6 +249,8 @@ export const useGameStore = create<GameStore>((set, get) => {
     setGlitchActive: (active: boolean) => set({ glitchActive: active }),
 
     setSystemBreach: (breach: boolean) => set({ systemBreach: breach }),
+
+    setTTSSpeaking: (speaking: boolean) => set({ isTTSSpeaking: speaking }),
 
     endGame: () => {
       // 手动结束时直接计算结局，跳过 summary 总结页
