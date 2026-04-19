@@ -1,20 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Plus, X, ChevronRight, User, LogOut, Loader2, Volume2, VolumeX } from 'lucide-react';
+import { Zap, Plus, X, ChevronRight, User, LogOut, Loader2 } from 'lucide-react';
 import { useGameStore } from '@/lib/game-store';
 import { useSecondMe } from '@/hooks/use-secondme';
 import { Scanlines, MiniChart } from './fui-overlays';
-import { supabase } from '@/lib/supabase';
 import type { SceneData } from '@/lib/game-types';
-
-interface GameSceneRow {
-  id: number;
-  video_url: string;
-  audio_url: string;
-  story_text: string;
-}
 
 const suggestedKeywords = [
   '企业刺客',
@@ -26,6 +18,107 @@ const suggestedKeywords = [
   '赛博僧侣',
   '数据走私',
 ];
+
+function extractJsonPayload(text: string): string | null {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+
+  if (
+    (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+    (trimmed.startsWith('[') && trimmed.endsWith(']'))
+  ) {
+    return trimmed;
+  }
+
+  const fencedJsonMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (fencedJsonMatch?.[1]) {
+    return fencedJsonMatch[1].trim();
+  }
+
+  const firstObjectStart = trimmed.indexOf('{');
+  const lastObjectEnd = trimmed.lastIndexOf('}');
+  if (firstObjectStart !== -1 && lastObjectEnd !== -1 && lastObjectEnd > firstObjectStart) {
+    return trimmed.slice(firstObjectStart, lastObjectEnd + 1);
+  }
+
+  const firstArrayStart = trimmed.indexOf('[');
+  const lastArrayEnd = trimmed.lastIndexOf(']');
+  if (firstArrayStart !== -1 && lastArrayEnd !== -1 && lastArrayEnd > firstArrayStart) {
+    return trimmed.slice(firstArrayStart, lastArrayEnd + 1);
+  }
+
+  return null;
+}
+
+function normalizeGeneratedScenes(payload: unknown): SceneData[] | null {
+  const scenes = Array.isArray(payload)
+    ? payload
+    : payload && typeof payload === 'object' && Array.isArray((payload as { scenes?: unknown[] }).scenes)
+      ? (payload as { scenes: unknown[] }).scenes
+      : null;
+
+  if (!scenes || scenes.length < 3) return null;
+
+  return scenes.slice(0, 3).map((scene, index) => {
+    const fallbackScene = {
+      id: `scene_${String(index + 1).padStart(3, '0')}`,
+      sectorCode: ['7G', '4X', '9Z'][index] ?? '??',
+      streamStatus: ['已加密', '监控中', '机密'][index] ?? '未知',
+      statImpact: index === 0 ? { wealth: -10 } : index === 1 ? { synchRate: 5 } : { sanity: -10 },
+    };
+
+    const rawScene = scene && typeof scene === 'object' ? (scene as Record<string, unknown>) : {};
+    const branchingOptions = Array.isArray(rawScene.branchingOptions)
+      ? rawScene.branchingOptions
+          .filter(option => option && typeof option === 'object')
+          .slice(0, 3)
+          .map((option, optionIndex) => {
+            const rawOption = option as Record<string, unknown>;
+            const type = rawOption.type;
+            return {
+              id:
+                typeof rawOption.id === 'string'
+                  ? rawOption.id
+                  : `choice_${index + 1}${String.fromCharCode(97 + optionIndex)}`,
+              text: typeof rawOption.text === 'string' ? rawOption.text : `选项${optionIndex + 1}`,
+              type: type === 'normal' || type === 'critical' || type === 'chaos' ? type : 'normal',
+              statImpact:
+                rawOption.statImpact && typeof rawOption.statImpact === 'object'
+                  ? (rawOption.statImpact as SceneData['statImpact'])
+                  : undefined,
+            };
+          })
+      : [];
+
+    return {
+      id: typeof rawScene.id === 'string' ? rawScene.id : fallbackScene.id,
+      sectorCode:
+        typeof rawScene.sectorCode === 'string' ? rawScene.sectorCode : fallbackScene.sectorCode,
+      streamStatus:
+        typeof rawScene.streamStatus === 'string' ? rawScene.streamStatus : fallbackScene.streamStatus,
+      videoPromptDescription:
+        typeof rawScene.videoPromptDescription === 'string'
+          ? rawScene.videoPromptDescription
+          : 'cinematic cyberpunk city, neon rain, dystopian future',
+      narrativeText:
+        typeof rawScene.narrativeText === 'string'
+          ? rawScene.narrativeText
+          : '信号受损，默认叙事片段已接管。',
+      statImpact:
+        rawScene.statImpact && typeof rawScene.statImpact === 'object'
+          ? (rawScene.statImpact as SceneData['statImpact'])
+          : fallbackScene.statImpact,
+      branchingOptions:
+        branchingOptions.length > 0
+          ? branchingOptions
+          : [
+              { id: `choice_${index + 1}a`, text: '继续追查信号源', type: 'normal' as const },
+              { id: `choice_${index + 1}b`, text: '尝试强制突破封锁', type: 'critical' as const },
+              { id: `choice_${index + 1}c`, text: '交给混沌协议处理', type: 'chaos' as const },
+            ],
+    };
+  });
+}
 
 async function generateScenes(keywords: string[]): Promise<SceneData[] | null> {
   const seed = keywords.reduce((acc, k) => acc + k.charCodeAt(0), 0);
@@ -104,18 +197,28 @@ Return ONLY valid JSON:
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
     const text = await response.text();
-    // 从响应文本中提取 JSON 块（防止 API 返回带警告前缀的非纯 JSON）
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('No JSON found in response');
-    const data = JSON.parse(jsonMatch[0]);
-
-    if (!Array.isArray(data?.scenes) || data.scenes.length < 3) {
-      throw new Error('Invalid scene structure');
+    const jsonPayload = extractJsonPayload(text);
+    if (!jsonPayload) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('场景生成返回非 JSON，已回退默认场景');
+      }
+      return null;
     }
-    return data.scenes as SceneData[];
+
+    const normalizedScenes = normalizeGeneratedScenes(JSON.parse(jsonPayload));
+    if (!normalizedScenes) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('场景生成结构无效，已回退默认场景');
+      }
+      return null;
+    }
+
+    return normalizedScenes;
   } catch (err) {
     clearTimeout(timeoutId);
-    console.warn('场景生成失败，回退默认场景:', err);
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('场景生成失败，已回退默认场景:', err);
+    }
     return null;
   }
 }
@@ -127,73 +230,6 @@ export function InitScreen() {
   const [loadingStage, setLoadingStage] = useState<'generating' | 'booting'>('generating');
   const { initializeGame } = useGameStore();
   const { user, isLoading: isUserLoading, isAuthenticated, login, logout } = useSecondMe();
-
-  // ---- Supabase 云端场景数据 ----
-  const [sceneRow, setSceneRow] = useState<GameSceneRow | null>(null);
-  const [isMuted, setIsMuted] = useState(true); // 浏览器策略：视频默认静音才能自动播放
-  const [isVideoLoading, setIsVideoLoading] = useState(true);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
-
-  // 组件挂载时从 game_scenes 表随机取一行
-  useEffect(() => {
-    let cancelled = false;
-    async function fetchRandomScene() {
-      // 用 Postgres 的 random() 来随机排序，取 1 行
-      const { data, error } = await supabase
-        .from('game_scenes')
-        .select('id, video_url, audio_url, story_text')
-        .order('id', { ascending: false }) // 先按反序
-        .limit(100); // 取一定范围
-
-      if (error || !data || data.length === 0) {
-        console.warn('获取场景数据失败:', error);
-        return;
-      }
-
-      // 客户端随机选一行
-      const randomIndex = Math.floor(Math.random() * data.length);
-      if (!cancelled) setSceneRow(data[randomIndex] as GameSceneRow);
-    }
-    fetchRandomScene();
-    return () => { cancelled = true; };
-  }, []);
-
-  // 场景加载后自动播放视频和音频
-  useEffect(() => {
-    if (!sceneRow) return;
-
-    // 视频自动播放（muted 时浏览器允许自动播放）
-    const video = videoRef.current;
-    if (video) {
-      video.src = sceneRow.video_url;
-      video.muted = true;
-      video.play().catch(() => {});
-    }
-
-    // 音频自动播放（大部分浏览器会阻止带声音的自动播放，用户交互后再恢复）
-    const audio = audioRef.current;
-    if (audio) {
-      audio.src = sceneRow.audio_url;
-      audio.play().catch(() => {});
-    }
-  }, [sceneRow]);
-
-  // 取消静音 / 恢复静音 toggle
-  const toggleMute = useCallback(() => {
-    setIsMuted(prev => {
-      const next = !prev;
-      if (videoRef.current) videoRef.current.muted = next;
-      if (audioRef.current) {
-        if (next) {
-          audioRef.current.pause();
-        } else {
-          audioRef.current.play().catch(() => {});
-        }
-      }
-      return next;
-    });
-  }, []);
 
   // 登录成功后从用户 bio/interests 自动推导关键词建议
   const secondmeKeywords: string[] = (() => {
@@ -222,10 +258,14 @@ export function InitScreen() {
 
     setIsLoading(true);
     setLoadingStage('generating');
-    const customScenes = await generateScenes(keywords);
-    setLoadingStage('booting');
-    await new Promise(resolve => setTimeout(resolve, 800));
-    initializeGame(keywords, customScenes ?? undefined);
+    try {
+      const customScenes = await generateScenes(keywords);
+      setLoadingStage('booting');
+      await new Promise(resolve => setTimeout(resolve, 800));
+      initializeGame(keywords, customScenes ?? undefined);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -235,46 +275,9 @@ export function InitScreen() {
       exit={{ opacity: 0 }}
       className="h-screen overflow-y-auto no-scrollbar bg-[#020202] flex items-center justify-center p-4 md:p-8 relative"
     >
-      {/* Background video from Supabase */}
-      {sceneRow?.video_url && (
-        <>
-          {isVideoLoading && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60">
-              <div className="flex items-center gap-3 text-[#00f2ff] font-mono text-sm animate-pulse">
-                <Loader2 className="w-5 h-5 animate-spin" />
-                正在同步神经元信号...
-              </div>
-            </div>
-          )}
-          <video
-            ref={videoRef}
-            className="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none"
-            autoPlay
-            loop
-            muted
-            playsInline
-            onCanPlay={() => setIsVideoLoading(false)}
-          />
-        </>
-      )}
-
-      {/* Hidden audio player */}
-      {sceneRow?.audio_url && (
-        <audio ref={audioRef} loop preload="auto" />
-      )}
-
       {/* Background effects */}
       <div className="absolute inset-0 fui-grid opacity-50" />
       <Scanlines />
-
-      {/* Mute / Unmute toggle */}
-      <button
-        onClick={toggleMute}
-        className="absolute top-8 right-8 z-20 p-2 rounded-full bg-black/40 border border-[#00f2ff]/30 text-[#00f2ff] hover:bg-black/60 transition-colors"
-        title={isMuted ? '取消静音' : '静音'}
-      >
-        {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-      </button>
       
       {/* Decorative elements */}
       <div className="absolute top-8 left-8">
@@ -314,23 +317,6 @@ export function InitScreen() {
             THE GLITCH SCRIPT // AI 影游体验
           </motion.p>
         </div>
-
-        {/* Story text from Supabase */}
-        <AnimatePresence>
-          {sceneRow?.story_text && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ delay: 0.35 }}
-              className="mb-6 px-4 py-3 rounded-xl border border-[#00f2ff]/15 bg-black/40 backdrop-blur-sm"
-            >
-              <p className="text-sm md:text-base font-mono text-[#00f2ff]/80 leading-relaxed text-center">
-                {sceneRow.story_text}
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Initialization card */}
         <motion.div
