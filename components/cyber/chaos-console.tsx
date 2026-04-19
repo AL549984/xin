@@ -45,10 +45,10 @@ export function ChaosConsole() {
   };
 
   return (
-    <div className="relative h-full max-h-[24rem] xl:max-h-[26rem]">
+    <div className="relative h-full min-h-0 flex-1">
       {/* Console container */}
       <motion.div
-        className="glass h-full max-h-[24rem] xl:max-h-[26rem] overflow-hidden rounded-xl border border-[#00f2ff]/20 p-4 flex flex-col"
+        className="glass h-full min-h-0 overflow-hidden rounded-xl border border-[#00f2ff]/20 p-4 flex flex-col"
         whileHover={{ borderColor: 'rgba(0, 242, 255, 0.4)' }}
       >
         {/* Header */}
@@ -62,6 +62,18 @@ export function ChaosConsole() {
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto pr-2 [scrollbar-color:rgba(34,211,238,0.7)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-cyan-500/70 [&::-webkit-scrollbar-track]:bg-transparent">
+          <div className="flex min-h-full flex-col">
+            <div className="rounded-lg border border-[#00f2ff]/10 bg-background/30 p-3 text-[11px] font-mono text-muted-foreground leading-relaxed">
+              暂无混沌事件日志。输入指令后，控制台会在此处持续记录干预状态与系统回响。
+            </div>
+
+            <div className="mt-3 pt-3 text-xs font-mono text-muted-foreground">
+              按 Enter 注入混沌事件，打断当前叙事流
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-auto flex-shrink-0 pt-3">
           {/* Input form */}
           <form onSubmit={handleSubmit} className="relative">
             <div className="flex items-center gap-2 rounded-lg border border-[#00f2ff]/10 bg-background/50 px-3 py-2 transition-colors focus-within:border-[#00f2ff]/40">
@@ -95,7 +107,7 @@ export function ChaosConsole() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="absolute top-full left-0 right-0 z-10 mt-2 overflow-hidden rounded-lg glass"
+                  className="absolute bottom-full left-0 right-0 z-10 mb-2 overflow-hidden rounded-lg glass"
                 >
                   {suggestions.map((suggestion, index) => (
                     <motion.button
@@ -115,11 +127,6 @@ export function ChaosConsole() {
               )}
             </AnimatePresence>
           </form>
-
-          {/* Helper text */}
-          <div className="pt-3 mt-3 text-xs font-mono text-muted-foreground">
-            按 Enter 注入混沌事件，打断当前叙事流
-          </div>
         </div>
       </motion.div>
     </div>

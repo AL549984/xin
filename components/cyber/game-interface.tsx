@@ -194,7 +194,7 @@ export function GameInterface() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
-              className="xl:flex-1"
+              className="min-h-0 xl:flex-1"
             >
               <ChaosConsole />
             </motion.div>
