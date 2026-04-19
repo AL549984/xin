@@ -131,6 +131,7 @@ export function InitScreen() {
   // ---- Supabase 云端场景数据 ----
   const [sceneRow, setSceneRow] = useState<GameSceneRow | null>(null);
   const [isMuted, setIsMuted] = useState(true); // 浏览器策略：视频默认静音才能自动播放
+  const [isVideoLoading, setIsVideoLoading] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -236,14 +237,25 @@ export function InitScreen() {
     >
       {/* Background video from Supabase */}
       {sceneRow?.video_url && (
-        <video
-          ref={videoRef}
-          className="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none"
-          autoPlay
-          loop
-          muted
-          playsInline
-        />
+        <>
+          {isVideoLoading && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60">
+              <div className="flex items-center gap-3 text-[#00f2ff] font-mono text-sm animate-pulse">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                正在同步神经元信号...
+              </div>
+            </div>
+          )}
+          <video
+            ref={videoRef}
+            className="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none"
+            autoPlay
+            loop
+            muted
+            playsInline
+            onCanPlay={() => setIsVideoLoading(false)}
+          />
+        </>
       )}
 
       {/* Hidden audio player */}
